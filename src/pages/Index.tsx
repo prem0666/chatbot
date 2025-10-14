@@ -1,10 +1,10 @@
 import { useState, useRef, useEffect } from "react";
 import VoiceOrb from "@/components/VoiceOrb";
 import ChatMessage from "@/components/ChatMessage";
+import TextInput from "@/components/TextInput";
 import { useToast } from "@/hooks/use-toast";
 import { streamChat, speakText, stopSpeaking } from "@/utils/audioUtils";
 import { Mic, MicOff } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 interface Message {
   role: "user" | "assistant";
@@ -27,6 +27,52 @@ const Index = () => {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  const sendMessage = async (userText: string, shouldSpeak: boolean = false) => {
+    const userMsg: Message = { role: "user", content: userText };
+    setMessages((prev) => [...prev, userMsg]);
+    setIsLoading(true);
+
+    let assistantContent = "";
+    const upsertAssistant = (nextChunk: string) => {
+      assistantContent += nextChunk;
+      setMessages((prev) => {
+        const last = prev[prev.length - 1];
+        if (last?.role === "assistant") {
+          return prev.map((m, i) =>
+            i === prev.length - 1 ? { ...m, content: assistantContent } : m
+          );
+        }
+        return [...prev, { role: "assistant", content: assistantContent }];
+      });
+    };
+
+    try {
+      await streamChat({
+        messages: [...messages, userMsg],
+        onDelta: (chunk) => upsertAssistant(chunk),
+        onDone: () => {
+          setIsLoading(false);
+          if (shouldSpeak) {
+            setIsSpeaking(true);
+            speakText(assistantContent);
+            
+            setTimeout(() => {
+              setIsSpeaking(false);
+            }, assistantContent.length * 50);
+          }
+        },
+      });
+    } catch (error) {
+      console.error(error);
+      setIsLoading(false);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to get response",
+        variant: "destructive",
+      });
+    }
+  };
 
   const startListening = () => {
     if (!("webkitSpeechRecognition" in window) && !("SpeechRecognition" in window)) {
@@ -52,48 +98,7 @@ const Index = () => {
     recognition.onresult = async (event: any) => {
       const transcript = event.results[0][0].transcript;
       setIsListening(false);
-      
-      const userMsg: Message = { role: "user", content: transcript };
-      setMessages((prev) => [...prev, userMsg]);
-      setIsLoading(true);
-
-      let assistantContent = "";
-      const upsertAssistant = (nextChunk: string) => {
-        assistantContent += nextChunk;
-        setMessages((prev) => {
-          const last = prev[prev.length - 1];
-          if (last?.role === "assistant") {
-            return prev.map((m, i) =>
-              i === prev.length - 1 ? { ...m, content: assistantContent } : m
-            );
-          }
-          return [...prev, { role: "assistant", content: assistantContent }];
-        });
-      };
-
-      try {
-        await streamChat({
-          messages: [...messages, userMsg],
-          onDelta: (chunk) => upsertAssistant(chunk),
-          onDone: () => {
-            setIsLoading(false);
-            setIsSpeaking(true);
-            speakText(assistantContent);
-            
-            setTimeout(() => {
-              setIsSpeaking(false);
-            }, assistantContent.length * 50);
-          },
-        });
-      } catch (error) {
-        console.error(error);
-        setIsLoading(false);
-        toast({
-          title: "Error",
-          description: error instanceof Error ? error.message : "Failed to get response",
-          variant: "destructive",
-        });
-      }
+      await sendMessage(transcript, true);
     };
 
     recognition.onerror = (event: any) => {
@@ -186,6 +191,9 @@ const Index = () => {
             <div ref={messagesEndRef} />
           </div>
         )}
+
+        {/* Text Input */}
+        <TextInput onSend={(text) => sendMessage(text, false)} disabled={isLoading} />
       </div>
     </div>
   );
