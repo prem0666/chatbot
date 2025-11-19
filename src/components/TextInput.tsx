@@ -21,29 +21,29 @@ const TextInput = ({ onSend, disabled }: TextInputProps) => {
   };
 
   return (
-    <motion.form
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.3 }}
+    <form
       onSubmit={handleSubmit}
-      className="w-full max-w-2xl flex gap-2"
+      className="w-full flex gap-2 items-end"
     >
-      <Input
-        type="text"
-        placeholder="Type your message..."
-        value={inputText}
-        onChange={(e) => setInputText(e.target.value)}
-        disabled={disabled}
-        className="flex-1 bg-card border-primary/20 focus:border-primary transition-colors"
-      />
-      <Button
-        type="submit"
-        disabled={!inputText.trim() || disabled}
-        className="bg-gradient-to-r from-primary to-primary-glow hover:opacity-90 transition-opacity"
-      >
-        <Send className="w-4 h-4" />
-      </Button>
-    </motion.form>
+      <div className="flex-1 relative">
+        <Input
+          type="text"
+          placeholder="Message Alex..."
+          value={inputText}
+          onChange={(e) => setInputText(e.target.value)}
+          disabled={disabled}
+          className="w-full bg-secondary/50 border-border/50 focus:border-primary transition-all rounded-2xl px-4 py-3 pr-12 text-sm shadow-sm"
+        />
+        <Button
+          type="submit"
+          disabled={!inputText.trim() || disabled}
+          size="icon"
+          className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 bg-primary hover:bg-primary/90 rounded-xl shadow-md transition-all hover:scale-105 disabled:opacity-50 disabled:hover:scale-100"
+        >
+          <Send className="w-4 h-4" />
+        </Button>
+      </div>
+    </form>
   );
 };
 

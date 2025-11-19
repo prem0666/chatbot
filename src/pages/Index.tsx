@@ -142,81 +142,125 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4 overflow-hidden relative">
-      {/* Background gradient effect */}
-      <div className="absolute inset-0 bg-gradient-radial opacity-50 pointer-events-none" />
-      
-      <div className="w-full max-w-4xl flex flex-col items-center gap-8 relative z-10">
-        {/* Header */}
-        <div className="text-center space-y-2">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">
-            Voice Assistant
-          </h1>
-          <p className="text-muted-foreground">
-            {isListening ? "Listening..." : isSpeaking ? "Speaking..." : "Tap to speak"}
-          </p>
+    <div className="min-h-screen bg-gradient-to-b from-background via-background/95 to-background flex flex-col">
+      {/* Header */}
+      <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="container flex h-16 items-center justify-between px-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center shadow-lg">
+              <span className="text-lg font-bold text-primary-foreground">A</span>
+            </div>
+            <div>
+              <h1 className="text-xl font-bold tracking-tight">Alex</h1>
+              <p className="text-xs text-muted-foreground">Your AI Companion</p>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <VoiceOrb
+              isListening={isListening}
+              isSpeaking={isSpeaking}
+              onClick={handleOrbClick}
+            />
+          </div>
         </div>
+      </header>
 
-        {/* Voice Orb */}
-        <VoiceOrb
-          isListening={isListening}
-          isSpeaking={isSpeaking}
-          onClick={handleOrbClick}
-        />
-
-        {/* Status indicator */}
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          {isListening ? (
-            <>
-              <Mic className="w-4 h-4 text-primary animate-pulse" />
-              <span>Listening to your voice...</span>
-            </>
-          ) : isSpeaking ? (
-            <>
-              <div className="w-4 h-4 rounded-full bg-primary animate-pulse" />
-              <span>Speaking response...</span>
-            </>
+      {/* Main Chat Area */}
+      <main className="flex-1 overflow-y-auto">
+        <div className="container max-w-4xl mx-auto px-4 py-6">
+          {messages.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-full min-h-[60vh] space-y-6 animate-fade-in">
+              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary/20 to-primary-glow/20 flex items-center justify-center">
+                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center shadow-2xl">
+                  <span className="text-3xl font-bold text-primary-foreground">A</span>
+                </div>
+              </div>
+              <div className="text-center space-y-3">
+                <h2 className="text-3xl font-bold tracking-tight">Hey there! I'm Alex</h2>
+                <p className="text-muted-foreground max-w-md">
+                  I'm here to chat, help, or just listen. Go ahead and ask me anything or tap the voice button to speak!
+                </p>
+              </div>
+              
+              {/* Status indicator */}
+              <div className="flex items-center gap-2 text-sm text-muted-foreground bg-secondary/50 px-4 py-2 rounded-full">
+                {isListening ? (
+                  <>
+                    <Mic className="w-4 h-4 text-primary animate-pulse" />
+                    <span>Listening to your voice...</span>
+                  </>
+                ) : isSpeaking ? (
+                  <>
+                    <div className="w-4 h-4 rounded-full bg-primary animate-pulse" />
+                    <span>Speaking response...</span>
+                  </>
+                ) : (
+                  <>
+                    <MicOff className="w-4 h-4" />
+                    <span>Ready to chat</span>
+                  </>
+                )}
+              </div>
+            </div>
           ) : (
-            <>
-              <MicOff className="w-4 h-4" />
-              <span>Click the orb to start</span>
-            </>
-          )}
-        </div>
-
-        {/* Chat History */}
-        {messages.length > 0 && (
-          <div className="w-full max-w-2xl bg-card/50 backdrop-blur-sm rounded-2xl border border-border p-6 max-h-96 overflow-y-auto space-y-4">
-            {messages.map((message, index) => (
-              <ChatMessage 
-                key={index} 
-                role={message.role} 
-                content={message.content}
-                timestamp={message.timestamp}
-              />
-            ))}
-            {isLoading && messages[messages.length - 1]?.role === "user" && (
-              <div className="flex items-start gap-3">
-                <div className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center bg-gradient-to-br from-primary to-primary-glow">
-                  <div className="w-5 h-5 flex items-center justify-center">
-                    <div className="flex gap-1">
-                      <div className="w-1.5 h-1.5 bg-primary-foreground rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                      <div className="w-1.5 h-1.5 bg-primary-foreground rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                      <div className="w-1.5 h-1.5 bg-primary-foreground rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+            <div className="space-y-6 pb-32">
+              {messages.map((message, index) => (
+                <ChatMessage 
+                  key={index} 
+                  role={message.role} 
+                  content={message.content}
+                  timestamp={message.timestamp}
+                />
+              ))}
+              {isLoading && messages[messages.length - 1]?.role === "user" && (
+                <div className="flex items-start gap-4 animate-fade-in">
+                  <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center shadow-lg">
+                    <span className="text-sm font-bold text-primary-foreground">A</span>
+                  </div>
+                  <div className="flex-1 space-y-2 pt-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-sm">Alex</span>
+                      <span className="text-xs text-muted-foreground">typing...</span>
+                    </div>
+                    <div className="bg-secondary/50 rounded-2xl px-4 py-3 inline-block">
+                      <div className="flex gap-1.5">
+                        <div className="w-2 h-2 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                        <div className="w-2 h-2 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                        <div className="w-2 h-2 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                      </div>
                     </div>
                   </div>
                 </div>
-                <div className="max-w-[70%] rounded-2xl px-4 py-3 bg-card text-card-foreground border border-primary/20">
-                  <p className="text-sm text-muted-foreground">Alex is typing...</p>
-                </div>
-              </div>
-            )}
-            <div ref={messagesEndRef} />
-          </div>
-        )}
+              )}
+              <div ref={messagesEndRef} />
+            </div>
+          )}
+        </div>
+      </main>
 
-        {/* Text Input */}
-        <TextInput onSend={(text) => sendMessage(text, false)} disabled={isLoading} />
+      {/* Input Area */}
+      <div className="sticky bottom-0 z-50 border-t border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="container max-w-4xl mx-auto px-4 py-4">
+          <TextInput onSend={(text) => sendMessage(text, false)} disabled={isLoading} />
+          
+          {/* Status indicator for mobile */}
+          {(isListening || isSpeaking) && (
+            <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground mt-2 animate-fade-in">
+              {isListening ? (
+                <>
+                  <Mic className="w-3 h-3 text-primary animate-pulse" />
+                  <span>Listening...</span>
+                </>
+              ) : (
+                <>
+                  <div className="w-3 h-3 rounded-full bg-primary animate-pulse" />
+                  <span>Speaking...</span>
+                </>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
