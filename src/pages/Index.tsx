@@ -9,6 +9,7 @@ import { Mic, MicOff } from "lucide-react";
 interface Message {
   role: "user" | "assistant";
   content: string;
+  timestamp: Date;
 }
 
 const Index = () => {
@@ -29,11 +30,12 @@ const Index = () => {
   }, [messages]);
 
   const sendMessage = async (userText: string, shouldSpeak: boolean = false) => {
-    const userMsg: Message = { role: "user", content: userText };
+    const userMsg: Message = { role: "user", content: userText, timestamp: new Date() };
     setMessages((prev) => [...prev, userMsg]);
     setIsLoading(true);
 
     let assistantContent = "";
+    const assistantTimestamp = new Date();
     const upsertAssistant = (nextChunk: string) => {
       assistantContent += nextChunk;
       setMessages((prev) => {
@@ -43,7 +45,7 @@ const Index = () => {
             i === prev.length - 1 ? { ...m, content: assistantContent } : m
           );
         }
-        return [...prev, { role: "assistant", content: assistantContent }];
+        return [...prev, { role: "assistant", content: assistantContent, timestamp: assistantTimestamp }];
       });
     };
 
@@ -186,8 +188,29 @@ const Index = () => {
         {messages.length > 0 && (
           <div className="w-full max-w-2xl bg-card/50 backdrop-blur-sm rounded-2xl border border-border p-6 max-h-96 overflow-y-auto space-y-4">
             {messages.map((message, index) => (
-              <ChatMessage key={index} role={message.role} content={message.content} />
+              <ChatMessage 
+                key={index} 
+                role={message.role} 
+                content={message.content}
+                timestamp={message.timestamp}
+              />
             ))}
+            {isLoading && messages[messages.length - 1]?.role === "user" && (
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center bg-gradient-to-br from-primary to-primary-glow">
+                  <div className="w-5 h-5 flex items-center justify-center">
+                    <div className="flex gap-1">
+                      <div className="w-1.5 h-1.5 bg-primary-foreground rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                      <div className="w-1.5 h-1.5 bg-primary-foreground rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                      <div className="w-1.5 h-1.5 bg-primary-foreground rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                    </div>
+                  </div>
+                </div>
+                <div className="max-w-[70%] rounded-2xl px-4 py-3 bg-card text-card-foreground border border-primary/20">
+                  <p className="text-sm text-muted-foreground">Alex is typing...</p>
+                </div>
+              </div>
+            )}
             <div ref={messagesEndRef} />
           </div>
         )}
